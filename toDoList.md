@@ -28,8 +28,8 @@ Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet a
 
 ## 2. Veri Toplama Modülü (Spotify & Genius)
 - [x] `spotipy` ile OAuth kimlik doğrulaması (Kullanıcı Premium Girişi) yapılması ve bağlantının doğrulanması.
-- [ ] `spotipy` ile kullanıcıdan alınan playlist linkindeki şarkıların SADECE isim ve sanatçı meta verilerini (Track Name & Artist) çeken fonksiyonun yazılması.
-- [ ] `lyricsgenius` ile playlistteki şarkıların sözlerinin metin olarak çekilmesi.
+- [x] `spotipy` ile kullanıcıdan alınan playlist linkindeki şarkıların SADECE isim ve sanatçı meta verilerini (Track Name & Artist) çeken fonksiyonun yazılması.
+- [x] `lyricsgenius` ile playlistteki şarkıların sözlerinin metin olarak çekilmesi.
 
 ### Kabul Kriterleri
 - Playlist'ten şarkı ve sanatçı isimleri (meta veriler) 404/403 hatası almadan başarıyla listelenebiliyor.
