@@ -127,6 +127,39 @@ def get_lyrics(track_name, artist_name):
         print(f"'{track_name}' şarkı sözleri çekilirken hata oluştu: {e}")
         return None
 
+def verify_track_on_spotify(track_name, artist_name):
+    """
+    Şarkı adı ve sanatçıyı Spotify'da arayarak varlığını doğrular ve detaylarını (link vb.) döndürür.
+    """
+    try:
+        client_id = os.getenv('SPOTIPY_CLIENT_ID')
+        client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
+        
+        if not client_id or not client_secret:
+            print("Spotify API anahtarları eksik, doğrulama atlanıyor.")
+            return None
+
+        # Arama (Search) için kullanıcı girişi gerektirmeyen Client Credentials kullanıyoruz
+        auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        query = f"track:{track_name} artist:{artist_name}"
+        results = sp.search(q=query, type='track', limit=1)
+
+        tracks = results.get('tracks', {}).get('items', [])
+        if tracks:
+            track = tracks[0]
+            return {
+                "spotify_url": track.get('external_urls', {}).get('spotify'),
+                "album_cover": track['album']['images'][0]['url'] if track.get('album', {}).get('images') else None,
+                "verified_name": track.get('name'),
+                "verified_artist": track['artists'][0]['name'] if track.get('artists') else artist_name
+            }
+        return None
+    except Exception as e:
+        print(f"Spotify arama hatası ({track_name} - {artist_name}): {e}")
+        return None
+
 if __name__ == "__main__":
     # Kısa bir test
     print("Müzik Veri Toplama Modülü Yüklendi.")

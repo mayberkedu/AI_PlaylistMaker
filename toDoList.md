@@ -38,11 +38,11 @@ Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet a
 ---
 
 ## 3. Analiz ve AI Öneri Motoru (Gemini Destekli)
-- [ ] Spotify'dan gelen şarkı listesini Gemini API'ye gönderip şarkıların tahmini teknik verilerini (BPM, Enerji, Enstrümantasyon, 808 sound ağırlığı) **Structured JSON** formatında döndüren Prompt yapısının kurulması.
-- [ ] Şarkı sözü metinlerinin Gemini API'ye gönderilerek bağlam (melankolik, hareketli vb.) etiketlerinin çıkarılması.
-- [ ] Elde edilen yapay zeka verileriyle playlistin "Profil Vektörü"nün (ortalama BPM, baskın soundlar, söz konsepti) hesaplanması.
-- [ ] Gemini API kullanılarak playlist verilerine dayanarak "Bu playlistin konsepti nedir, hangi ruh halinde dinlenir?" açıklama metninin üretilmesi.
-- [ ] Belirlenen profile ve konsept etiketlerine uygun yeni şarkı önerilerini (şarkı adı ve sanatçı olarak) doğrudan Gemini'a ürettiren ve bu şarkıları Spotify Search API ile doğrulayan algoritmanın yazılması.
+- [x] Spotify'dan gelen şarkı listesini Gemini API'ye gönderip şarkıların tahmini teknik verilerini (BPM, Enerji, Enstrümantasyon, 808 sound ağırlığı) **Structured JSON** formatında döndüren Prompt yapısının kurulması.
+- [x] Şarkı sözü metinlerinin Gemini API'ye gönderilerek bağlam (melankolik, hareketli vb.) etiketlerinin çıkarılması.
+- [x] Elde edilen yapay zeka verileriyle playlistin "Profil Vektörü"nün (ortalama BPM, baskın soundlar, söz konsepti) hesaplanması.
+- [x] Gemini API kullanılarak playlist verilerine dayanarak "Bu playlistin konsepti nedir, hangi ruh halinde dinlenir?" açıklama metninin üretilmesi.
+- [x] Belirlenen profile ve konsept etiketlerine uygun yeni şarkı önerilerini (şarkı adı ve sanatçı olarak) doğrudan Gemini'a ürettiren ve bu şarkıları Spotify Search API ile doğrulayan algoritmanın yazılması.
 
 ### Kabul Kriterleri
 - Gemini API, parça listesini aldığında BPM ve ses tipi içeren geçerli bir JSON çıktısı üretiyor.
