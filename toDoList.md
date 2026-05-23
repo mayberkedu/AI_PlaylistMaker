@@ -8,7 +8,7 @@ Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet a
 ## İçerik (Kısa)
 1. Proje Ortamı ve API Kurulumları
 2. Veri Toplama Modülü (Spotify & Genius)
-3. Analiz ve AI Öneri Motoru
+3. Analiz ve AI Öneri Motoru (Gemini Destekli)
 4. Chatbot Modülü Geliştirme
 5. Streamlit ile Web Arayüzü (Frontend)
 
@@ -27,36 +27,36 @@ Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet a
 ---
 
 ## 2. Veri Toplama Modülü (Spotify & Genius)
-- [ ] `spotipy` ile kullanıcıdan alınan playlist linkindeki şarkıların listesini çeken fonksiyonun yazılması.
-- [ ] Audio Features endpoint'i kullanılarak şarkıların BPM, enerji, valence (duygu durumu) verilerinin çekilmesi.
-- [ ] Şarkıların tür (genre) ve akustik/elektronik oranlarının analiz edilerek ses profillerinin (örn. alt frekans/bass karakteristiği) belirlenmesi.
+- [x] `spotipy` ile OAuth kimlik doğrulaması (Kullanıcı Premium Girişi) yapılması ve bağlantının doğrulanması.
+- [ ] `spotipy` ile kullanıcıdan alınan playlist linkindeki şarkıların SADECE isim ve sanatçı meta verilerini (Track Name & Artist) çeken fonksiyonun yazılması.
 - [ ] `lyricsgenius` ile playlistteki şarkıların sözlerinin metin olarak çekilmesi.
 
 ### Kabul Kriterleri
-- Playlist'ten şarkı meta verileri ve audio-feature verileri alınabiliyor.
+- Playlist'ten şarkı ve sanatçı isimleri (meta veriler) 404/403 hatası almadan başarıyla listelenebiliyor.
 - Sözler (lyrics) başarıyla indirilebiliyor veya uygun şekilde mock edilebiliyor.
 
 ---
 
-## 3. Analiz ve AI Öneri Motoru
-- [ ] Çekilen verilerle playlistin matematiksel "Profil Vektörü"nün (ortalama BPM, enerji seviyesi vb.) hesaplanması.
-- [ ] Şarkı sözü metinlerinin Gemini API'ye (veya seçilecek LLM'ye) gönderilerek bağlam (melankolik, hareketli vb.) etiketlerinin çıkarılması.
-- [ ] Gemini (veya seçilecek model) kullanılarak, analiz edilen playlist verilerine dayanarak "Bu playlistin konsepti nedir?" sorusunun AI tarafından açıklanması.
-- [ ] Belirlenen profile ve konsept etiketlerine uygun yeni şarkıların Spotify'da aranmasını sağlayan öneri algoritmasının yazılması.
+## 3. Analiz ve AI Öneri Motoru (Gemini Destekli)
+- [ ] Spotify'dan gelen şarkı listesini Gemini API'ye gönderip şarkıların tahmini teknik verilerini (BPM, Enerji, Enstrümantasyon, 808 sound ağırlığı) **Structured JSON** formatında döndüren Prompt yapısının kurulması.
+- [ ] Şarkı sözü metinlerinin Gemini API'ye gönderilerek bağlam (melankolik, hareketli vb.) etiketlerinin çıkarılması.
+- [ ] Elde edilen yapay zeka verileriyle playlistin "Profil Vektörü"nün (ortalama BPM, baskın soundlar, söz konsepti) hesaplanması.
+- [ ] Gemini API kullanılarak playlist verilerine dayanarak "Bu playlistin konsepti nedir, hangi ruh halinde dinlenir?" açıklama metninin üretilmesi.
+- [ ] Belirlenen profile ve konsept etiketlerine uygun yeni şarkı önerilerini (şarkı adı ve sanatçı olarak) doğrudan Gemini'a ürettiren ve bu şarkıları Spotify Search API ile doğrulayan algoritmanın yazılması.
 
 ### Kabul Kriterleri
-- Profil vektörü hesaplama modülü çalışıyor ve bir örnek giriş için beklenen özet değerleri üretiyor.
-- AI etiketlemesi tutarlı ve örnek çıktılarla doğrulanabiliyor.
+- Gemini API, parça listesini aldığında BPM ve ses tipi içeren geçerli bir JSON çıktısı üretiyor.
+- AI konsept açıklaması ve yeni şarkı önerileri tutarlı bir şekilde üretilebiliyor.
 
 ---
 
 ## 4. Chatbot Modülü Geliştirme
-- [ ] Kullanıcıdan gelen serbest metinli promptları (örn. "üzgünüm, 80 bpm keman") işleyip Spotify'ın anlayacağı parametrelere (düşük valence, 80 tempo, akustik) çeviren bir prompt zinciri (Prompt Chain) oluşturulması.
-- [ ] Çıkarılan parametrelerle Spotify Search API'ye sorgu atan fonksiyonun yazılması.
+- [ ] Kullanıcıdan gelen serbest metinli promptları (örn. "üzgünüm, 80 bpm keman") işleyip müzikal filtrelere (Düşük valence, Klasik müzik, Akustik) çeviren bir Gemini Prompt Zinciri (Prompt Chain) oluşturulması.
+- [ ] Kullanıcının chatbot üzerinden istediği tarza uygun şarkı önerilerini Gemini'a ürettirip, bu şarkıları doğrulamak ve çalma detaylarını almak için Spotify Search API'ye sorgu atan fonksiyonun yazılması.
 - [ ] Önerilen şarkının, chatbotun kullanıcıya vereceği doğal ve empati kuran bir cevap metniyle birleştirilmesi.
 
 ### Kabul Kriterleri
-- Chat prompt → parametre dönüşümü çalışıyor ve örnek sorgularla doğrulanabiliyor.
+- Chat prompt → Gemini müzik önerisi akışı çalışıyor ve Spotify Search ile eşleşiyor.
 - Chatbot önerisi kullanıcıya okunaklı bir metin olarak dönüyor.
 
 ---
@@ -75,24 +75,20 @@ Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet a
 ---
 
 ## Ek Notlar / İyi Uygulamalar
-- Önce mock veri ve fonksiyonlarla başlayın; API anahtarlarını sonradan ekleyin.
-- Küçük, test edilebilir parçalar halinde ilerleyin (örn. önce profil vektörü, sonra lyrics etiketleme, vs.).
+- Spotify API artık teknik ses analizlerini (BPM vb.) dışarıya kapattığı için bu verilerin tamamı Gemini API'ye tahmin ettirilecektir.
+- LLM'den gelen verilerin kod tarafında kırılma yaratmaması için her zaman `response_format={"type": "json_object"}` veya Pydantic şemaları kullanılmalıdır.
 - Gizli anahtarlar `.gitignore` ve `.env` ile korunmalı.
 
 ---
 
 ## Milestones (Kısa)
 - M1: Repo scaffolding + README + basit Streamlit sayfası (1-2 gün)
-- M2: Veri toplama + profil hesaplama + AI etiketleme (2-5 gün)
-- M3: Chatbot + öneri algoritması + export seçenekleri (sonraki hafta)
+- M2: Spotify'dan sadece parça listesi çekme + Gemini ile BPM/Sound analizi (2-4 gün)
+- M3: Chatbot entegrasyonu + Öneri eşleştirme algoritması (3-5 gün)
 
 ---
 
 ## Hemen Yapılacaklar / Next Steps
-1. Projenin runtime'ını (Python) onayla ve bir `README.md` ile temel çalıştırma talimatlarını ekle.
-2. `requirements.txt` oluştur (ilk sürüm: streamlit, spotipy, lyricsgenius, python-dotenv).
-3. Basit bir `app.py` (Streamlit) iskeleti ekleyip çalıştır (örnek: `streamlit run app.py`).
-
----
-
-Dosya güncellendi: biçim düzenlendi ve görevler daha okunabilir hale getirildi. İstersen şimdi `README.md`, `requirements.txt` ve bir minimal `app.py` iskeleti oluşturabilirim.
+1. Projenin yeni mimarisini içeren `app.py` (Streamlit) iskeletini oluşturmak.
+2. `requirements.txt` dosyasını sabitlemek.
+3. Spotify'dan bir playlist linki verildiğinde içindeki şarkıların sadece isimlerini temiz bir şekilde çeken fonksiyonu yazmak.
