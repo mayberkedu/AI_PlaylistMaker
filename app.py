@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from data_collection import extract_playlist_tracks, get_lyrics
-from ai_engine import analyze_playlist_with_gemini, analyze_lyrics_with_gemini, get_recommendations_with_gemini
+from ai_engine import analyze_playlist_with_gemini, analyze_lyrics_with_gemini, get_recommendations_with_gemini, chat_with_gemini_and_recommend
 
 # Sayfa yapılandırması
 st.set_page_config(
@@ -60,7 +60,7 @@ with tab1:
             with st.spinner("Gemini API, çalma listenizin müzikal materyalini analiz ediyor..."):
                 st.session_state.profile = analyze_playlist_with_gemini(tracks)
                 if "error" not in st.session_state.profile:
-                    st.session_state.recs = get_recommendations_with_gemini(st.session_state.profile, count=4)
+                    st.session_state.recs = get_recommendations_with_gemini(st.session_state.profile, count=4, existing_tracks=st.session_state.tracks)
 
         if st.session_state.profile:
             profile = st.session_state.profile
@@ -88,13 +88,25 @@ with tab1:
                                 st.markdown(f"[🎧 Spotify'da Dinle]({rec.get('spotify_url')})")
 
         st.divider()
-        # Test amaçlı: İlk şarkının sözlerini çekmeyi deneyebiliriz
-        first_track = tracks[0]
-        st.subheader(f"Örnek Söz & Tema Analizi: {first_track['track_name']} - {first_track['artist']}")
+        st.subheader("🎵 Şarkı Sözü ve Tema Analizi")
 
-        if st.button("Sözleri Çek ve Analiz Et"):
-            with st.spinner("Genius'tan sözler aranıyor ve Gemini ile analiz ediliyor..."):
-                lyrics = get_lyrics(first_track['track_name'], first_track['artist'])
+        def clear_lyrics_state():
+            st.session_state.lyrics = None
+            st.session_state.lyric_analysis = None
+
+        track_options = [f"{t['track_name']} - {t['artist']}" for t in tracks]
+        selected_track_str = st.selectbox(
+            "Analiz etmek istediğiniz şarkıyı seçin:", 
+            track_options,
+            on_change=clear_lyrics_state
+        )
+
+        selected_index = track_options.index(selected_track_str)
+        selected_track = tracks[selected_index]
+
+        if st.button("Seçili Şarkının Sözlerini Çek ve Analiz Et"):
+            with st.spinner(f"Genius'tan '{selected_track['track_name']}' sözleri aranıyor ve Gemini ile analiz ediliyor..."):
+                lyrics = get_lyrics(selected_track['track_name'], selected_track['artist'])
                 if lyrics:
                     st.session_state.lyrics = lyrics
                     st.session_state.lyric_analysis = analyze_lyrics_with_gemini(lyrics)
@@ -116,5 +128,55 @@ with tab1:
         st.error(f"Hata oluştu: {st.session_state.error_msg}")
 
 with tab2:
-    st.header("AI Chatbot (Yakında)")
-    st.info("Bu özellik henüz geliştirilme aşamasındadır. Yakında çalma listenize dayalı sohbet ve yapay zeka önerileri burada olacak.")
+    st.header("🤖 AI Chatbot")
+    st.markdown("Listenize veya ruh halinize uygun yeni müzikler keşfedin.")
+
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if "recommendations" in message and message["recommendations"]:
+                for rec in message["recommendations"]:
+                    with st.expander(f"🎵 {rec.get('track_name')} - {rec.get('artist')}"):
+                        st.write(f"**Neden önerildi?** {rec.get('reason')}")
+                        if rec.get("spotify_url"):
+                            st.markdown(f"[🎧 Spotify'da Dinle]({rec.get('spotify_url')})")
+
+    # React to user input
+    if prompt := st.chat_input("Bugün nasıl hissediyorsun? Nasıl bir şarkı dinlemek istersin?"):
+        # Display user message in chat message container
+        st.chat_message("user").markdown(prompt)
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        with st.chat_message("assistant"):
+            with st.spinner("AI Asistan düşünüyor..."):
+                response_data = chat_with_gemini_and_recommend(
+                    user_prompt=prompt,
+                    chat_history=st.session_state.messages[:-1], # Son mesajı ayrıca yolluyoruz zaten
+                    profile_data=st.session_state.profile,
+                    existing_tracks=st.session_state.tracks
+                )
+                
+                bot_text = response_data.get("chatbot_response", "Bir hata oluştu, cevap alınamadı.")
+                bot_recs = response_data.get("recommendations", [])
+                
+                st.markdown(bot_text)
+                
+                if bot_recs:
+                    for rec in bot_recs:
+                        with st.expander(f"🎵 {rec.get('track_name')} - {rec.get('artist')}"):
+                            st.write(f"**Neden önerildi?** {rec.get('reason')}")
+                            if rec.get("spotify_url"):
+                                st.markdown(f"[🎧 Spotify'da Dinle]({rec.get('spotify_url')})")
+
+        # Add assistant response to chat history
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": bot_text,
+            "recommendations": bot_recs
+        })

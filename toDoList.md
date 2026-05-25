@@ -1,5 +1,11 @@
 # AIPlaylistMaker — Yapılacaklar (To-Do List)
 
+> **Not:** Projeyi çalıştırmak için terminalde şu komutu kullanabilirsiniz:
+> ```bash
+> streamlit run app.py
+> ```
+> *(Eğer sanal ortam kullanıyorsanız öncesinde aktif etmeyi unutmayın, örn: `.\venv\Scripts\activate`)*
+
 ## Kısa Özet
 Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet arayüzü sağlayan bir prototip oluşturmayı hedefliyor (Streamlit + Python + ücretsiz/ücretli API entegrasyonları).
 
@@ -51,9 +57,9 @@ Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet a
 ---
 
 ## 4. Chatbot Modülü Geliştirme
-- [ ] Kullanıcıdan gelen serbest metinli promptları (örn. "üzgünüm, 80 bpm keman") işleyip müzikal filtrelere (Düşük valence, Klasik müzik, Akustik) çeviren bir Gemini Prompt Zinciri (Prompt Chain) oluşturulması.
-- [ ] Kullanıcının chatbot üzerinden istediği tarza uygun şarkı önerilerini Gemini'a ürettirip, bu şarkıları doğrulamak ve çalma detaylarını almak için Spotify Search API'ye sorgu atan fonksiyonun yazılması.
-- [ ] Önerilen şarkının, chatbotun kullanıcıya vereceği doğal ve empati kuran bir cevap metniyle birleştirilmesi.
+- [x] Kullanıcıdan gelen serbest metinli promptları (örn. "üzgünüm, 80 bpm keman") işleyip müzikal filtrelere (Düşük valence, Klasik müzik, Akustik) çeviren bir Gemini Prompt Zinciri (Prompt Chain) oluşturulması.
+- [x] Kullanıcının chatbot üzerinden istediği tarza uygun şarkı önerilerini Gemini'a ürettirip, bu şarkıları doğrulamak ve çalma detaylarını almak için Spotify Search API'ye sorgu atan fonksiyonun yazılması.
+- [x] Önerilen şarkının, chatbotun kullanıcıya vereceği doğal ve empati kuran bir cevap metniyle birleştirilmesi.
 
 ### Kabul Kriterleri
 - Chat prompt → Gemini müzik önerisi akışı çalışıyor ve Spotify Search ile eşleşiyor.
@@ -62,12 +68,12 @@ Bu proje, bir çalma listesini analiz edip AI destekli öneriler ve bir sohbet a
 ---
 
 ## 5. Streamlit ile Web Arayüzü (Frontend)
-- [ ] `st.set_page_config` ile ana sayfa yapısının ve başlıkların ayarlanması.
-- [ ] Sayfanın `st.tabs` ile iki ana sekmeye ayrılması: "Playlist Analizi" ve "AI Chatbot".
-- [ ] 1. Sekme: Playlist linki almak için `st.text_input` alanı eklenmesi ve işlemler sürerken `st.spinner` ile yükleme animasyonu gösterilmesi.
-- [ ] AI tarafından üretilen playlist açıklamasının ve önerilen şarkıların listesinin arayüzde görselleştirilmesi (örn. `st.dataframe` veya özel kartlar).
-- [ ] 2. Sekme: Streamlit'in `st.chat_message` ve `st.chat_input` bileşenleri ile chatbot arayüzünün oluşturulması.
-- [ ] Chat geçmişinin silinmemesi için oturum durumu (`st.session_state`) yapılandırılması.
+- [x] `st.set_page_config` ile ana sayfa yapısının ve başlıkların ayarlanması.
+- [x] Sayfanın `st.tabs` ile iki ana sekmeye ayrılması: "Playlist Analizi" ve "AI Chatbot".
+- [x] 1. Sekme: Playlist linki almak için `st.text_input` alanı eklenmesi ve işlemler sürerken `st.spinner` ile yükleme animasyonu gösterilmesi.
+- [x] AI tarafından üretilen playlist açıklamasının ve önerilen şarkıların listesinin arayüzde görselleştirilmesi (örn. `st.dataframe` veya özel kartlar).
+- [x] 2. Sekme: Streamlit'in `st.chat_message` ve `st.chat_input` bileşenleri ile chatbot arayüzünün oluşturulması.
+- [x] Chat geçmişinin silinmemesi için oturum durumu (`st.session_state`) yapılandırılması.
 
 ### Kabul Kriterleri
 - Streamlit arayüzü çalışır durumda ve temel akışları sergileyebiliyor (analiz + chatbot).

@@ -98,7 +98,7 @@ Beklenen JSON Yapısı:
         print(f"Gemini API Söz Analiz Hatası: {e}")
         return None
 
-def get_recommendations_with_gemini(profile_data, count=5):
+def get_recommendations_with_gemini(profile_data, count=5, existing_tracks=None):
     """
     Playlist profiline dayanarak yeni şarkı önerilerinde bulunur.
     """
@@ -107,8 +107,14 @@ def get_recommendations_with_gemini(profile_data, count=5):
 
     try:
         model = genai.GenerativeModel(MODEL_NAME)
+        
+        existing_tracks_text = ""
+        if existing_tracks:
+            track_names = [t.get("track_name") for t in existing_tracks]
+            existing_tracks_text = "\nLütfen şu şarkıları ÖNERME (çünkü zaten çalma listesinde varlar):\n- " + "\n- ".join(track_names)
+
         prompt = f"""
-Bana aşağıdaki müzik profiline mükemmel şekilde uyacak {count} adet yeni şarkı önerisinde bulun. 
+Bana aşağıdaki müzik profiline mükemmel şekilde uyacak {count + 3} adet yepyeni şarkı önerisinde bulun. 
 
 Profil:
 - Konsept: {profile_data.get('playlist_concept')}
@@ -116,6 +122,7 @@ Profil:
 - Ortalama BPM: {profile_data.get('average_bpm')}
 - Türler: {', '.join(profile_data.get('dominant_genres', []))}
 - Müzikal Profil: {profile_data.get('musical_profile')}
+{existing_tracks_text}
 
 Lütfen cevabını SADECE GEÇERLİ BİR JSON listesi (array) formatında ver. 
 Her bir eleman şu yapıda olmalı:
@@ -135,11 +142,18 @@ Her bir eleman şu yapıda olmalı:
         )
         recommendations = json.loads(response.text)
 
+        existing_names = [t.get("track_name", "").lower() for t in existing_tracks] if existing_tracks else []
         verified_recs = []
         for rec in recommendations:
+            if len(verified_recs) >= count:
+                break
+            
             track_name = rec.get("track_name")
             artist = rec.get("artist")
             if track_name and artist:
+                if track_name.lower() in existing_names:
+                    print(f"Elenen Şarkı (Zaten listede): {track_name}")
+                    continue
                 verification = verify_track_on_spotify(track_name, artist)
                 if verification:
                     rec["spotify_url"] = verification["spotify_url"]
@@ -152,3 +166,101 @@ Her bir eleman şu yapıda olmalı:
     except Exception as e:
         print(f"Gemini API Öneri Hatası: {e}")
         return []
+
+def chat_with_gemini_and_recommend(user_prompt, chat_history, profile_data=None, existing_tracks=None):
+    """
+    Kullanıcının serbest metinli isteklerini ve (varsa) liste profilini alıp,
+    hem empatik bir metin cevabı hem de uygun şarkı önerileri döner.
+    """
+    if not gemini_api_key:
+        return {"chatbot_response": "Gemini API anahtarı eksik.", "recommendations": []}
+
+    try:
+        model = genai.GenerativeModel(MODEL_NAME)
+        
+        # Geçmiş mesajları düz metin olarak birleştir (son 5 mesaj)
+        history_text = ""
+        for msg in chat_history[-5:]:
+            role = "Kullanıcı" if msg["role"] == "user" else "Asistan"
+            # Asistanın mesajı obje veya text olabilir, bunu app.py'ye göre temizleyeceğiz
+            content = msg["content"]
+            history_text += f"{role}: {content}\n"
+
+        profile_context = ""
+        if profile_data and "error" not in profile_data:
+             profile_context = f"""
+Kullanıcının Mevcut Çalma Listesi Profili:
+- Konsept: {profile_data.get('playlist_concept')}
+- Ruh Hali: {profile_data.get('mood')}
+- Ortalama BPM: {profile_data.get('average_bpm')}
+- Türler: {', '.join(profile_data.get('dominant_genres', []))}
+"""
+
+        existing_tracks_text = ""
+        if existing_tracks:
+            track_names = [t.get("track_name") for t in existing_tracks]
+            existing_tracks_text = "\nLütfen şu şarkıları ÖNERME (çünkü zaten çalma listesinde varlar):\n- " + "\n- ".join(track_names)
+
+        prompt = f"""
+Sen müzik zevki çok iyi olan, anlayışlı ve empatik bir AI Asistansın.
+Kullanıcı sana müzik ruh haliyle ilgili bir şeyler yazdı veya yeni şarkılar önerilmesini istedi.
+
+{profile_context}
+{existing_tracks_text}
+
+Son Konuşma Geçmişi:
+{history_text}
+Kullanıcının Son Mesajı: {user_prompt}
+
+Kullanıcının son mesajına uygun, samimi bir metin cevabı ver. 
+Eğer kullanıcının mesajı bir müzik isteği içeriyorsa (açıkça belirtilmiş veya ruh halinden anlaşılıyorsa), en fazla 5 adet yepyeni şarkı önerisi yap.
+Eğer sadece sohbet ediyorsa şarkı önermene gerek yok.
+
+Yanıtını SADECE AŞAĞIDAKİ JSON formatında ver:
+{{
+  "chatbot_response": "Kullanıcıya vereceğin samimi ve doğal cevap metni",
+  "recommendations": [
+    {{
+      "track_name": "Şarkı Adı",
+      "artist": "Sanatçı Adı",
+      "reason": "Neden önerdin?"
+    }}
+  ]
+}}
+"""
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json"
+            )
+        )
+        
+        result = json.loads(response.text)
+        
+        existing_names = [t.get("track_name", "").lower() for t in existing_tracks] if existing_tracks else []
+        verified_recs = []
+        for rec in result.get("recommendations", []):
+            if len(verified_recs) >= 3:
+                break
+                
+            track_name = rec.get("track_name")
+            artist = rec.get("artist")
+            if track_name and artist:
+                if track_name.lower() in existing_names:
+                    print(f"Chatbot Elenen Şarkı (Zaten listede): {track_name}")
+                    continue
+                verification = verify_track_on_spotify(track_name, artist)
+                if verification:
+                    rec["spotify_url"] = verification["spotify_url"]
+                    rec["album_cover"] = verification["album_cover"]
+                    verified_recs.append(rec)
+                else:
+                    print(f"Chatbot önerisi doğrulanamadı: {track_name} - {artist}")
+        
+        result["recommendations"] = verified_recs
+        return result
+        
+    except Exception as e:
+        print(f"Chatbot Hatası: {e}")
+        return {"chatbot_response": f"Üzgünüm, bir hata oluştu: {str(e)}", "recommendations": []}
+

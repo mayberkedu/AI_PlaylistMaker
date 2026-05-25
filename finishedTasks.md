@@ -36,3 +36,27 @@ _Not: API anahtarlarınızı oluşturduktan sonra projedeki `.env` dosyasını d
 - **Söz Analizi:** `analyze_lyrics_with_gemini()` fonksiyonu Genius'tan çekilen metinleri yapay zekaya yorumlatır.
 - **Akıllı Öneri Sistemi:** `get_recommendations_with_gemini()` fonksiyonu, yukarıda çıkartılan AI Profili'ni girdi olarak alıp, bu profile "birebir uyan" yepyeni 4 şarkı tavsiye eder ve neden uygun olduklarını açıklar. **Ek olarak (3. Adımın Tamamlanması):** LLM'in (Gemini) olmayan şarkıları (halüsinasyon) önermesini engellemek için `data_collection.py` dosyasına `verify_track_on_spotify()` fonksiyonu eklendi. Gemini'ın önerdiği her şarkı `SpotifyClientCredentials` kullanılarak Spotify Search API üzerinden arka planda doğrulanır. Yalnızca Spotify'da gerçekten var olan şarkılar onaylanır ve uygulamada tıklanabilir dinleme bağlantıları (`spotify_url`) ile birlikte kullanıcıya sunulur.
 - **Arayüz Entegrasyonu (`app.py`):** Bulunan liste başarıyla yüklendikten sonra arayüze "AI ile Çözümle" butonu eklendi ve tüm müzikal metrikleri estetik Streamlit komponentleriyle (`st.metric`, `st.columns`) kullanıcıya görselleştirildi.
+- **Dinamik Söz Analizi (Güncelleme):** Arayüzdeki "Söz ve Tema Analizi" bölümü güncellenerek, test amaçlı sabit şarkı yerine listedeki tüm şarkıların bir açılır menü (`selectbox`) üzerinden seçilerek dinamik şekilde analiz edilebilmesi sağlandı. Seçim değiştiğinde eski verilerin temizlenmesi için `on_change` metodu eklendi.
+
+## 4. Chatbot Modülü Geliştirme
+
+**Durum:** Tamamlandı
+**Tarih:** 25 Mayıs 2026
+
+**Yapılanlar ve Çalışma Mekanizması:**
+- `ai_engine.py` içerisinde yeni `chat_with_gemini_and_recommend` fonksiyonu eklendi.
+- Botun konuşma geçmişini ve çalma listesi profili bağlamını kullanarak mantıklı, empatik cevaplar ve şarkı önerileri vermesi sağlandı.
+- Arayüz (`app.py`), `st.chat_message` ve `st.chat_input` ile interaktif bir chatbot arayüzüne dönüştürüldü.
+- Gemini'nin önerdiği şarkılar arka planda `verify_track_on_spotify` ile denetlenip Spotify bağlantıları eklendi.
+
+## 5. Streamlit ile Web Arayüzü (Frontend)
+
+**Durum:** Tamamlandı
+**Tarih:** 25 Mayıs 2026
+
+**Yapılanlar ve Çalışma Mekanizması:**
+- Önceki adımların bir parçası olarak arayüz tasarımı parça parça tamamlanmıştı.
+- **Tasarım Yapısı:** `st.set_page_config` ile ana sayfa yapısı oluşturuldu. İki sekme (`st.tabs`) ile analiz ve sohbet ayrıldı.
+- **Kullanıcı Deneyimi:** Form girişlerinde `st.spinner` yükleme animasyonları eklendi.
+- **Görselleştirme:** AI analiz verileri kolonlar ve metrik kartları halinde düzenli bir şekilde ekrana basıldı.
+- **Session State Yönetimi:** Kullanıcı arayüzde gezindikçe veya butona bastıkça sayfa yenilense bile chat geçmişi, playlist profili ve mevcut verilerin silinmemesi için tüm değerler `st.session_state` içerisine bağlandı.
